@@ -1,12 +1,15 @@
 package com.anagracetech.book.auth;
 
 import com.anagracetech.book.email.EmailService;
+import com.anagracetech.book.email.EmailTemplateName;
 import com.anagracetech.book.role.RoleRepository;
 import com.anagracetech.book.user.Token;
 import com.anagracetech.book.user.TokenRepository;
 import com.anagracetech.book.user.User;
 import com.anagracetech.book.user.UserRepository;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +26,10 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
-    public void register(RegistrationRequest request) {
+    @Value("${application.mailing.frontend.activation-url}")
+    private String activationUrl;
+
+    public void register(RegistrationRequest request) throws MessagingException {
         var userRole = roleRepository.findByName("USER")
                 //Todo: enhance exception handling
                 .orElseThrow(() -> new IllegalStateException("ROLE USER was not initialized"));
@@ -40,9 +46,17 @@ public class AuthenticationService {
         sendValidationEmail(user);
     }
 
-    private void sendValidationEmail(User user) {
+    private void sendValidationEmail(User user) throws MessagingException {
         var newToken = generateAndSaveActivationToken(user);
-        // send email
+        
+        emailService.sendEmail(
+                user.getEmail(),
+                user.fullName(),
+                EmailTemplateName.ACTIVATE_ACCOUNT,
+                activationUrl,
+                newToken,
+                "Account activation"
+        );
     }
 
     private String generateAndSaveActivationToken(User user) {
