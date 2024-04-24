@@ -1,6 +1,5 @@
-package com.anagracetech.book.book;
+package com.anagracetech.book.common;
 
-import com.anagracetech.book.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,15 +19,24 @@ import java.time.LocalDateTime;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class Book extends BaseEntity {
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public class BaseEntity {
 
-    private String title;
-    private String authorName;
-    private String isbn;
-    private String synopsis;
-    private String bookCover;
-    private boolean archived;
-    private boolean shareable;
+    @Id
+    @GeneratedValue
+    private Integer id;
 
+    @CreatedDate
+    @Column(nullable = false,updatable = false)
+    private LocalDateTime createdDate;
+    @LastModifiedDate
+    @Column(insertable = false)
+    private LocalDateTime lastModifiedDate;
+    @CreatedBy
+    @Column(nullable = false,updatable = false)
+    private Integer createdBy;
+    @LastModifiedBy
+    @Column(insertable = false)
+    private Integer lastModifiedBy;
 }
