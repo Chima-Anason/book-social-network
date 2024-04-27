@@ -1,5 +1,6 @@
 package com.anagracetech.book.book;
 
+import com.anagracetech.book.common.PageResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,14 @@ public class BookController {
             @PathVariable("book-id") Integer bookId
     ){
         return ResponseEntity.ok(bookService.findBookById(bookId));
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponse<BookResponse>> findAllBooks(
+            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            Authentication connectedUser
+    ){
+        return ResponseEntity.ok(bookService.findAllBooks(page, size, connectedUser));
     }
 }
