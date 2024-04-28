@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.anagracetech.book.book.BookSpecification.*;
 
@@ -153,5 +154,21 @@ public class BookService {
                 .build();
         transactionHistoryRepository.save(transactionHistory);
         return transactionHistoryRepository.save(transactionHistory).getId();
+    }
+
+    public Integer returnBorrowedBook(Integer bookId, Authentication connectedUser) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("No book found with ID :: " +bookId));
+        User user = (User) connectedUser.getPrincipal();
+        if (book.isArchived() || !book.isShareable()) {
+            throw new OperationNotPermittedException("Book is either archived or not shareable and cannot be borrowed");
+        }
+        if (Objects.equals(user.getId(), book.getOwner().getId())) {
+            throw new OperationNotPermittedException("You are not allowed to borrow or return your own book");
+        }
+        BookTransactionHistory bookTransactionHistory = transactionHistoryRepository.findByBookIdAndUserId(bookId, user.getId())
+                .orElseThrow(() -> new OperationNotPermittedException("You have not borrowed this book yet"));
+        bookTransactionHistory.setReturned(true);
+        return transactionHistoryRepository.save(bookTransactionHistory).getId();
     }
 }
