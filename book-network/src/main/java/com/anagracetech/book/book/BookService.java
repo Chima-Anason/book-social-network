@@ -1,6 +1,7 @@
 package com.anagracetech.book.book;
 
 import com.anagracetech.book.common.PageResponse;
+import com.anagracetech.book.exception.OperationNotPermittedException;
 import com.anagracetech.book.history.BookTransactionHistory;
 import com.anagracetech.book.history.BookTransactionHistoryRepository;
 import com.anagracetech.book.user.User;
@@ -14,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.anagracetech.book.book.BookSpecification.*;
 
@@ -103,5 +105,17 @@ public class BookService {
                 allReturnedBooks.getTotalPages(),
                 allReturnedBooks.isFirst(),
                 allReturnedBooks.isLast());
+    }
+
+    public Integer updateShareableStatus(Integer bookId, Authentication connectedUser) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("No book found with ID :: " +bookId));
+        User user = (User) connectedUser.getPrincipal();
+        if (!Objects.equals(user.getId(), book.getOwner().getId())) {
+            throw new OperationNotPermittedException("You are not authorized to update this book");
+        }
+        book.setShareable(!book.isShareable());
+        bookRepository.save(book);
+        return bookId;
     }
 }
