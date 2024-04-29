@@ -1,5 +1,6 @@
 package com.anagracetech.book.book;
 
+import com.anagracetech.book.file.FileUtils;
 import com.anagracetech.book.history.BookTransactionHistory;
 import org.springframework.stereotype.Service;
 
@@ -27,8 +28,7 @@ public class BookMapper {
                 .archived(book.isArchived())
                 .shareable(book.isShareable())
                 .owner(book.getOwner().fullName())
-                // todo implement this later
-                //.cover()
+                .cover(FileUtils.readFileFromLocation(book.getBookCover()))
                 .build();
     }
 
@@ -41,8 +41,6 @@ public class BookMapper {
                 .rate(history.getBook().getRate())
                 .returned(history.isReturned())
                 .returnedApproved(history.isReturnApproved())
-                // todo implement this later
-                //.cover()
                 .build();
     }
 }
