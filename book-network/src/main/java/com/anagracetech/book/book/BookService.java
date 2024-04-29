@@ -2,9 +2,11 @@ package com.anagracetech.book.book;
 
 import com.anagracetech.book.common.PageResponse;
 import com.anagracetech.book.exception.OperationNotPermittedException;
+import com.anagracetech.book.file.FileStorageService;
 import com.anagracetech.book.history.BookTransactionHistory;
 import com.anagracetech.book.history.BookTransactionHistoryRepository;
 import com.anagracetech.book.user.User;
+import jakarta.mail.internet.MimeBodyPart;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +30,8 @@ public class BookService {
     private final BookRepository bookRepository;
     private final BookTransactionHistoryRepository transactionHistoryRepository;
     private final BookMapper bookMapper;
+    private final FileStorageService fileStorageService;
+
     public Integer save(BookRequest request, Authentication connectedUser) {
         User user = (User) connectedUser.getPrincipal();
         Book book = bookMapper.toBook(request);
@@ -186,5 +191,14 @@ public class BookService {
                 .orElseThrow(() -> new OperationNotPermittedException("The book is not returned yet"));
         bookTransactionHistory.setReturnApproved(true);
         return transactionHistoryRepository.save(bookTransactionHistory).getId();
+    }
+
+    public void uploadBookCoverPicture(Integer bookId, MultipartFile file, Authentication connectedUser) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("No book found with ID :: " +bookId));
+        User user = (User) connectedUser.getPrincipal();
+        var bookCover = fileStorageService.saveFile(file, user.getId());
+        book.setBookCover(bookCover);
+        bookRepository.save(book);
     }
 }
