@@ -24,7 +24,7 @@ public interface BookTransactionHistoryRepository extends JpaRepository <BookTra
         FROM BookTransactionHistory history
         WHERE history.book.owner.id = :userId
         """)
-    Page<BookTransactionHistory> findAllByReturnedBooks(Pageable pageable, Integer id);
+    Page<BookTransactionHistory> findAllByReturnedBooks(Pageable pageable, Integer userId);
 
     @Query("""
         SELECT 
@@ -44,5 +44,15 @@ public interface BookTransactionHistoryRepository extends JpaRepository <BookTra
         AND transaction.returned = false
         AND transaction.returnApproved = false
         """)
-    Optional<BookTransactionHistory> findByBookIdAndUserId(Integer bookId, Integer id);
+    Optional<BookTransactionHistory> findByBookIdAndUserId(Integer bookId, Integer userId);
+
+    @Query("""
+        SELECT transaction
+        FROM BookTransactionHistory transaction
+        WHERE transaction.book.owner.id = :userId
+        AND transaction.book.id = :bookId
+        AND transaction.returned = true
+        AND transaction.returnApproved = false
+        """)
+    Optional<BookTransactionHistory> findByBookIdAndOwnerId(Integer bookId, Integer id);
 }
